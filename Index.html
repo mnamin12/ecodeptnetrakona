@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অর্থনীতি বিভাগ</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0056b3; --secondary: #28a745; --accent: #ffc107;
+            --light: #f0f2f5; --dark: #333; --card-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --name-color: #004080;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'SolaimanLipi', 'AdorshoLipi', Arial, sans-serif; 
+            margin: 0; padding-bottom: 70px; background-color: var(--light); 
+            color: var(--dark); line-height: 1.6;
+        }
+        
+        .top-header { 
+            background: linear-gradient(135deg, var(--primary) 0%, #003d80 100%);
+            color: white; padding: 20px; text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .top-header h1 { margin: 0; font-size: clamp(24px, 6vw, 30px); }
+        .top-header h2 { margin: 5px 0 0; font-size: clamp(16px, 4vw, 20px); font-weight: normal; opacity: 0.9; }
+        
+        .date-time-container {
+            font-size: 14px; color: var(--dark); background-color: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px; border-radius: 8px; margin: 15px auto 0 auto;
+            max-width: 300px; border: 1px solid #bbdefb; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .main-content { 
+            padding: 25px 20px; margin: 10px; border-radius: 15px; 
+            text-align: center; background: white; box-shadow: var(--card-shadow); 
+        }
+        
+        .menu-container { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 25px; }
+        
+        .menu-button { 
+            background: #ffffff; color: var(--primary); padding: 20px; border: 1px solid #ddd;
+            border-left: 5px solid var(--primary); border-radius: 10px; cursor: pointer; text-align: left; 
+            font-size: clamp(18px, 4.5vw, 20px); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease; display: flex; align-items: center; gap: 15px;
+        }
+        
+        .menu-button:hover { 
+            transform: translateY(-3px); box-shadow: 0 6px 10px rgba(0,0,0,0.1); border-left-color: var(--accent); 
+        }
+        
+        .menu-button i { font-size: 24px; color: var(--primary); }
+        
+        .content-section-wrapper { display: none; padding: 10px 15px; animation: fadeIn 0.5s; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .content-section-inner { 
+            background-color: #ffffff; padding: 20px; border-radius: 15px; 
+            box-shadow: var(--card-shadow); margin-bottom: 20px;
+        }
+        
+        .content-section-inner h2 { 
+            color: var(--primary); border-bottom: 3px solid var(--accent); padding-bottom: 12px; 
+            margin-top: 0; display: flex; align-items: center; gap: 10px; justify-content: center;
+        }
+        
+        .card { 
+            background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; 
+            margin-bottom: 20px; display: flex; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            transition: all 0.3s ease; gap: 15px;
+        }
+        .card.detailed-person { 
+            flex-direction: column; 
+            text-align: center;
+            align-items: center;
+        }
+        .card.simple-person { align-items: center; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        .card .person-img { 
+            width: 120px; height: 150px; border-radius: 8px; object-fit: cover; 
+            border: 3px solid var(--primary); flex-shrink: 0; margin-bottom: 10px;
+        }
+        .simple-person .person-img { width: 80px; height: 100px; margin-bottom: 0; }
+        
+        .card .person-details { text-align: left; flex-grow: 1; }
+        .detailed-person .person-details { text-align: center; }
+        
+        .card h3 { margin: 0 0 8px 0; color: var(--name-color); font-size: 1.25rem; }
+        .card p { margin: 6px 0; color: #555; font-size: 1rem; }
+        .card a { color: var(--primary); text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+        .card a:hover { text-decoration: underline; }
+        .person-details i.fas { margin-right: 8px; color: #888; width: 20px; text-align: center; }
+        
+        .notice-card a { 
+            display: inline-block; margin-top: 10px; background: var(--secondary); color: white; 
+            padding: 8px 15px; border-radius: 5px; text-decoration: none; transition: background-color 0.3s;
+        }
+        
+        .notice-card a:hover { background: #218838; }
+        
+        .bottom-nav { 
+            position: fixed; left: 0; bottom: 0; width: 100%; background-color: #ffffff; 
+            border-top: 1px solid #e0e0e0; display: flex; justify-content: space-around; 
+            padding: 8px 0; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); 
+        }
+        
+        .nav-button { 
+            background: none; border: none; cursor: pointer; display: flex; flex-direction: column; 
+            align-items: center; color: var(--primary); font-size: 13px; flex-grow: 1; transition: color 0.3s;
+        }
+        
+        .nav-button:hover { color: #003d80; }
+        .nav-button i { font-size: 24px; margin-bottom: 4px; }
+        
+        .footer { 
+            color: #444; text-align: center; padding: 12px 0; font-size: 13px; 
+            border-top: 1px solid #eee; margin-top: 30px; 
+        }
+        
+        .loading { text-align: center; padding: 40px; }
+        .loading-spinner { 
+            width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); 
+            border-radius: 50%; animation: spin 1s linear infinite; margin: auto; 
+        }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .back-button {
+            display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px;
+            padding: 8px 15px; background-color: var(--primary); color: white;
+            border-radius: 5px; cursor: pointer; text-decoration: none;
+        }
+        
+        .no-data { text-align: center; padding: 30px; color: #666; }
+    </style>
+</head>
+<body>
+
+    <div id="main-screen">
+        <div class="top-header">
+            <h1>অর্থনীতি বিভাগ</h1>
+            <h2>নেত্রকোণা সরকারি কলেজ</h2>
+            <div class="date-time-container" id="currentDateTime"></div>
+        </div>
+        
+        <div class="main-content">
+            <div class="menu-container">
+                <button class="menu-button" onclick="showContent('college-admin')"><i class="fas fa-landmark"></i> কলেজ প্রশাসন</button>
+                <button class="menu-button" onclick="showContent('teachers')"><i class="fas fa-users"></i> বিভাগে কর্মরত শিক্ষক/শিক্ষিকা</button>
+                <button class="menu-button" onclick="showContent('staff')"><i class="fas fa-user-tie"></i> সহায়ক কর্মচারী</button>
+                <button class="menu-button" onclick="showContent('former-teachers')"><i class="fas fa-history"></i> প্রাক্তন শিক্ষক/শিক্ষিকা</button>
+                <button class="menu-button" onclick="showContent('notices')"><i class="fas fa-bullhorn"></i> নোটিশ</button>
+            </div>
+            <div class="footer">
+                Developed by<br>Mohammad Nurul Amin<br>Mobile: 01734508732
+            </div>
+        </div>
+    </div>
+
+    <div id="content-container" class="content-section-wrapper"></div>
+    
+    <div class="bottom-nav">
+        <button class="nav-button" onclick="goHome()"><i class="fas fa-home"></i><span>হোম</span></button>
+        <button class="nav-button" onclick="goBack()"><i class="fas fa-arrow-left"></i><span>পিছনে</span></button>
+        <button class="nav-button" onclick="exitApp()"><i class="fas fa-sign-out-alt"></i><span>বন্ধ করুন</span></button>
+    </div>
+
+<script>
+    const SUPABASE_URL = 'https://deeohcnrprefwiarnzrz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlZW9oY25ycHJlZndpYXJuenJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxOTE0MDEsImV4cCI6MjA3MTc2NzQwMX0.T9N1p5N-xXfkkfp5okko-7pY3FJJSHKCn_6KqN9_4EA';
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const mainScreen = document.getElementById('main-screen');
+    const contentContainer = document.getElementById('content-container');
+    const currentDateTime = document.getElementById('currentDateTime');
+    const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NjYyI+PHBhdGggZD0iTTEyIDJDNi44OCAyIDIgNi44OCAyIDEyczQuODggMTAgMTAgMTAgMTAtNC44OCAxMC0xMFMxNy4xMiAyIDEyIDJ6bTAgM2MxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzIDN6bTAgMTRjLTIuNjcgMC04IDEuMzQtOCA0djJoMTZ2LTJjMC0yLjY2LTUuMzMtNC04LTR6Ii8+PC9zdmc+';
+
+    function updateDateTime() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        currentDateTime.textContent = now.toLocaleDateString('bn-BD', options);
+    }
+    
+    function initApp() {
+        updateDateTime();
+        setInterval(updateDateTime, 60000);
+        
+        // *** পরিবর্তন: Service Worker রেজিস্টার করা ***
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+            .then(registration => console.log('Service Worker registered with scope:', registration.scope))
+            .catch(error => console.log('Service Worker registration failed:', error));
+        }
+
+        if (window.history && window.history.pushState) {
+            window.addEventListener('popstate', () => { if (mainScreen.style.display === 'none') goHome(); });
+        }
+        window.addEventListener('online', syncAllData);
+    }
+
+    async function loadData(tableName, cardRenderer, title, icon) {
+        contentContainer.innerHTML = `
+        <div class="content-section-inner">
+            <div class="back-button" onclick="goHome()"><i class="fas fa-arrow-left"></i> ফিরে যান</div>
+            <h2><i class="fas fa-${icon}"></i> ${title}</h2>
+            <div class="data-container">
+                <div class="loading"><div class="loading-spinner"></div><p>লোড হচ্ছে...</p></div>
+            </div>
+        </div>`;
+        contentContainer.style.display = 'block';
+        mainScreen.style.display = 'none';
+
+        const dataContainer = contentContainer.querySelector('.data-container');
+        const cacheKey = `cache_${tableName}`;
+        
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+            const data = JSON.parse(cachedData);
+            dataContainer.innerHTML = data && data.length > 0 ? data.map(cardRenderer).join('') : '<div class="no-data"><p>কোনো তথ্য পাওয়া যায়নি</p></div>';
+        }
+
+        if (navigator.onLine) {
+            try {
+                const { data, error } = await db.from(tableName).select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                dataContainer.innerHTML = data && data.length > 0 ? data.map(cardRenderer).join('') : '<div class="no-data"><p>কোনো তথ্য পাওয়া যায়নি</p></div>';
+            } catch (err) {
+                console.error('Error fetching fresh data:', err);
+                if (!cachedData) {
+                    dataContainer.innerHTML = '<div class="no-data"><p>তথ্য লোড করতে সমস্যা হয়েছে।</p></div>';
+                }
+            }
+        }
+    }
+
+    const detailedPersonCard = (p) => `
+    <div class="card detailed-person">
+        <img src="${p.image_url || defaultImage}" alt="${p.name}" class="person-img" onerror="this.src='${defaultImage}'">
+        <div class="person-details">
+            <h3><i class="fas fa-user-graduate"></i> ${p.name || 'নাম নেই'}</h3>
+            <p><i class="fas fa-briefcase"></i> <strong>পদবী:</strong> ${p.designation || 'N/A'}</p>
+            ${p.id_number ? `<p><i class="fas fa-id-card"></i> <strong>আইডি নং:</strong> ${p.id_number}</p>` : ''}
+            ${p.bcs_batch ? `<p><i class="fas fa-award"></i> <strong>বিসিএস ব্যাচ:</strong> ${p.bcs_batch}</p>` : ''}
+            ${p.mobile ? `<p><a href="tel:${p.mobile}"><i class="fas fa-phone"></i> ${p.mobile}</a></p>` : ''}
+        </div>
+    </div>`;
+
+    const simplePersonCard = (p) => `
+    <div class="card simple-person">
+        <img src="${p.image_url || defaultImage}" alt="${p.name}" class="person-img" onerror="this.src='${defaultImage}'">
+        <div class="person-details">
+            <h3>${p.name || 'নাম নেই'}</h3>
+            <p>${p.designation || 'পদবী নেই'}</p>
+            ${p.mobile ? `<p><a href="tel:${p.mobile}"><i class="fas fa-phone"></i> ${p.mobile}</a></p>` : ''}
+        </div>
+    </div>`;
+
+    const noticeCard = (n) => `
+    <div class="card notice-card">
+        <div>
+            <h3>${n.title || 'শিরোনাম নেই'}</h3>
+            <p><strong>তারিখ:</strong> ${new Date(n.created_at).toLocaleDateString('bn-BD')}</p>
+            <p style="white-space: pre-wrap;">${n.details || 'কোনো বিবরণ নেই'}</p>
+            ${n.file_url ? `<a href="${n.file_url}" target="_blank"><i class="fas fa-download"></i> ${n.file_name || 'ডাউনলোড'}</a>` : ''}
+        </div>
+    </div>`;
+    
+    const menuMap = {
+        'college-admin': { table: 'college_admin', renderer: detailedPersonCard, title: 'কলেজ প্রশাসন', icon: 'landmark' },
+        'teachers': { table: 'teachers', renderer: detailedPersonCard, title: 'বিভাগে কর্মরত শিক্ষক/শিক্ষিকা', icon: 'users' },
+        'staff': { table: 'staff', renderer: simplePersonCard, title: 'সহায়ক কর্মচারী', icon: 'user-tie' },
+        'former-teachers': { table: 'former_teachers', renderer: detailedPersonCard, title: 'প্রাক্তন শিক্ষক/শিক্ষিকা', icon: 'history' },
+        'notices': { table: 'notices', renderer: noticeCard, title: 'নোটিশ', icon: 'bullhorn' }
+    };
+
+    function showContent(type) {
+        if (menuMap[type]) {
+            const { table, renderer, title, icon } = menuMap[type];
+            loadData(table, renderer, title, icon);
+        }
+    }
+
+    async function syncAllData() {
+        console.log("Online, checking for new data...");
+        for (const key in menuMap) {
+            const tableName = menuMap[key].table;
+            try {
+                const { data, error } = await db.from(tableName).select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                localStorage.setItem(`cache_${tableName}`, JSON.stringify(data));
+                console.log(`Synced: ${tableName}`);
+            } catch (err) {
+                console.error(`Failed to sync ${tableName}:`, err);
+            }
+        }
+    }
+
+    function goHome() {
+        mainScreen.style.display = 'block';
+        contentContainer.style.display = 'none';
+        contentContainer.innerHTML = '';
+        if (window.history && window.history.pushState) { window.history.pushState({}, ''); }
+    }
+
+    function goBack() {
+        if (mainScreen.style.display === 'none') goHome(); 
+        else exitApp();
+    }
+
+    // *** পরিবর্তন: অ্যাপ বন্ধ করার জন্য সংশোধিত ফাংশন ***
+    function exitApp() {
+        if (confirm("আপনি কি অ্যাপ থেকে বের হতে চান?")) {
+            // This is the standard way for installed PWAs or apps in a WebView
+            if (navigator.app && navigator.app.exitApp) {
+                navigator.app.exitApp();
+            } 
+            // Fallback for older Cordova versions or other environments
+            else if (window.navigator && window.navigator.app) {
+                 window.navigator.app.exitApp();
+            }
+            // A general fallback that might work in some webviews
+            else {
+                window.close();
+            }
+        }
+    }
+
+    window.onload = initApp;
+</script>
+
+</body>
+</html>```
